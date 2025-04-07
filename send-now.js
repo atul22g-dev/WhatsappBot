@@ -10,15 +10,14 @@ puppeteer.use(StealthPlugin());
 // Define session directory
 const SESSION_DIR = path.join(__dirname, 'whatsapp-session');
 
-// WhatsApp Auto Sender Class
+// WhatsApp Auto Sender Class (simplified version that sends immediately)
 class WhatsAppAutoSender {
-  constructor({ url, targetName, message, count, time, sessionId = 'default' }) {
+  constructor({ url, targetName, message, count, sessionId = 'default' }) {
     // Initialize values
     this.url = url || 'https://web.whatsapp.com'; // Default WhatsApp Web URL
     this.targetName = targetName; // Receiver Name
     this.message = message; // Message to send
     this.count = count; // Number of times to send
-    this.time = time; // Scheduled Time (HH:MM)
     this.sessionId = sessionId; // Session ID for saving/loading browser session
     this.sessionDir = path.join(SESSION_DIR, this.sessionId); // Session directory path
   }
@@ -63,13 +62,14 @@ class WhatsAppAutoSender {
       } else {
         console.log('Already logged in!');
       }
+
+      // Send message immediately
+      await this.sendMessage();
+
     } catch (error) {
       console.error('Error during login process:', error.message);
       throw error;
     }
-
-    // Wait until scheduled time matches
-    await this.waitForScheduledTime();
   }
 
   // Extract QR code and display it in terminal
@@ -103,29 +103,6 @@ class WhatsAppAutoSender {
     } catch (error) {
       console.error('Error extracting QR code:', error.message);
     }
-  }
-
-  // Check every minute until scheduled time matches current time
-  async waitForScheduledTime() {
-    // Clean up the time string to ensure proper format (remove any spaces)
-    const cleanTime = this.time.replace(/\s+/g, '');
-    const [targetHour, targetMinute] = cleanTime.split(':').map(Number);
-
-    console.log(`Waiting for time: ${targetHour}:${targetMinute} to send message to ${this.targetName}...`);
-
-    const checkTime = setInterval(async () => {
-      const now = new Date();
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-
-      console.log(`Current Time: ${currentHour}:${currentMinute}`);
-
-      // If current time matches scheduled time, send the message
-      if (currentHour === targetHour && currentMinute === targetMinute) {
-        clearInterval(checkTime); // Stop checking time
-        await this.sendMessage(); // Call send message function
-      }
-    }, 30 * 1000); // Check every 30 seconds for more accuracy
   }
 
   // Send Message to Target User
@@ -171,22 +148,22 @@ class WhatsAppAutoSender {
   }
 }
 
-// Pass data only one time here
+// Configuration - edit these values
 const sender = new WhatsAppAutoSender({
-  targetName: "Atul",               // Receiver's Name
-  message: "This is a test message 4",// Message to send
-  count: "10",                      // Number of times to send
-  time: "15:55",                     // Scheduled Time (HH:MM)
-  sessionId: "my-whatsapp-session"    // Session ID for persistence
+  targetName: "Atul",                  // Receiver's Name as it appears in WhatsApp
+  message: "This is a test message",   // Message to send
+  count: "3",                          // Number of times to send
+  sessionId: "my-whatsapp-session"     // Session ID for persistence
 });
 
-// Add proper error handling and cleanup
+// Run the bot and handle errors
 sender.init()
   .catch(error => {
     console.error('Error in WhatsApp Bot:', error);
   })
   .finally(() => {
     // We don't close the browser here as we want to keep the session active
-    // If you want to close it after sending messages, you can add a close method to the class
+    // If you want to close it after sending, uncomment the next line
+    // setTimeout(() => sender.close(), 5000); // Close after 5 seconds
     console.log('Process completed.');
   });
