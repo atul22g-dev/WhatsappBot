@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const fs = require('fs-extra');
 const path = require('path');
+const { url,targetName, message, count, time, sessionId } = require('./config');
 
 // Add stealth plugin to puppeteer (helps avoid detection)
 puppeteer.use(StealthPlugin());
@@ -135,11 +136,12 @@ class WhatsAppAutoSender {
 
 // Pass Data for Single Execution
 const sender = new WhatsAppAutoSender({
-  targetName: "Atul",              // Receiver Name
-  message: "This is a test message 4", // Message Content
-  count: "10",                     // Total Messages
-  time: "15:55",                   // Scheduled Time (HH:MM)
-  sessionId: "my-whatsapp-session" // Unique Session ID
+  url,
+  targetName,
+  message,
+  count,
+  time,
+  sessionId,
 });
 
 // Execute the Bot
